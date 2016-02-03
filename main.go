@@ -68,9 +68,9 @@ func querydb(host string, cxn *sqlcxn, wg *sync.WaitGroup) {
 		scanArgs[i] = &values[i]
 	}
 
-	fmt.Print(host)
 	// Fetch rows
 	for rows.Next() {
+	  fmt.Print(host)
 		// get RawBytes from data
 		err = rows.Scan(scanArgs...)
 		if err != nil {

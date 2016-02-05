@@ -41,20 +41,23 @@ func querydb(host string, cxn *sqlcxn, wg *sync.WaitGroup) {
 	defer wg.Done()
 	db, err := sql.Open("mysql", cxn.username+":"+cxn.password+"@tcp("+host+":"+strconv.Itoa(cxn.port)+")/")
 	if err != nil {
-		panic(err.Error()) // Just for example purpose. You should use proper error handling instead of panic
+		fmt.Println(host, "\t", err.Error())
+		return
 	}
 	defer db.Close()
 
 	// Execute the query
 	rows, err := db.Query(cxn.query)
 	if err != nil {
-		panic(err.Error()) // proper error handling instead of panic in your app
+		fmt.Println(host, "\t", err.Error())
+		return
 	}
 
 	// Get column names
 	columns, err := rows.Columns()
 	if err != nil {
-		panic(err.Error()) // proper error handling instead of panic in your app
+		fmt.Println(host, "\t", err.Error())
+		return
 	}
 
 	// Make a slice for the values
@@ -70,11 +73,12 @@ func querydb(host string, cxn *sqlcxn, wg *sync.WaitGroup) {
 
 	// Fetch rows
 	for rows.Next() {
-	  fmt.Print(host)
+		fmt.Print(host)
 		// get RawBytes from data
 		err = rows.Scan(scanArgs...)
 		if err != nil {
-			panic(err.Error()) // proper error handling instead of panic in your app
+			fmt.Println(host, "\t", err.Error())
+			return
 		}
 
 		// Now do something with the data.
@@ -92,13 +96,14 @@ func querydb(host string, cxn *sqlcxn, wg *sync.WaitGroup) {
 		fmt.Println()
 	}
 	if err = rows.Err(); err != nil {
-		panic(err.Error()) // proper error handling instead of panic in your app
+		fmt.Println(host, "\t", err.Error())
+		return
 	}
 }
 
 func main() {
-  VERSION := "0.0.1"
-  var versionBool bool
+	VERSION := "0.0.1"
+	var versionBool bool
 	var wg sync.WaitGroup
 	var databases string
 	var defaultsFile string
@@ -112,14 +117,14 @@ func main() {
 	flag.StringVar(&cxn.username, "username", "", "The MySQL user to connect as (default: Current User)")
 	flag.StringVar(&defaultsFile, "defaults-file", ".my.cnf", "File to use instead of .my.cnf")
 	flag.StringVar(&databases, "databases", "", "Databases (comma-separated) to run query against")
-  flag.BoolVar(&versionBool, "version", false, "Display version information and exit")
+	flag.BoolVar(&versionBool, "version", false, "Display version information and exit")
 
 	flag.Parse()
 
-  if versionBool == true {
-    fmt.Println("omnisql VERSION:", VERSION)
-    os.Exit(1)
-  }
+	if versionBool == true {
+		fmt.Println("omnisql VERSION:", VERSION)
+		os.Exit(1)
+	}
 
 	fi, err := os.Stdin.Stat()
 	if err != nil {

@@ -2,9 +2,12 @@ package main
 
 import (
 	"bufio"
+  "crypto/tls"
+  "crypto/x509"
 	"database/sql"
 	"flag"
 	"fmt"
+  "io/ioutil"
 	"os"
 	"os/user"
 	"runtime"
@@ -14,7 +17,7 @@ import (
 
 	"github.com/alyu/configparser"
 
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/go-sql-driver/mysql"
 )
 
 type sqlcxn struct {
@@ -39,11 +42,42 @@ type sqlcxn struct {
 
 func querydb(host string, cxn *sqlcxn, wg *sync.WaitGroup) {
 	defer wg.Done()
-	db, err := sql.Open("mysql", cxn.username+":"+cxn.password+"@tcp("+host+":"+strconv.Itoa(cxn.port)+")/")
-	if err != nil {
-		fmt.Println(host, "\t", err.Error())
-		return
-	}
+
+  var db *sql.DB
+  var err error
+
+  // SSL Support
+  if cxn.sslCa != "" || cxn.sslCaPath != "" || cxn.sslCert != "" || cxn.sslCipher != "" || cxn.sslKey != "" {
+    rootCAs := x509.NewCertPool()
+    {
+      pem, err := ioutil.ReadFile(cxn.sslCa)
+      if err != nil {
+        fmt.Println(err.Error())
+      }
+      if ok := rootCAs.AppendCertsFromPEM(pem); !ok {
+        fmt.Println("Failed to append PEM.")
+      }
+    }
+    clientCerts := make([]tls.Certificate, 0, 1)
+    {
+      certs, err := tls.LoadX509KeyPair(cxn.sslCert, cxn.sslKey)
+      if err != nil {
+        fmt.Println(err.Error())
+      }
+      clientCerts = append(clientCerts, certs)
+    }
+    mysql.RegisterTLSConfig("omnisql", &tls.Config{
+      RootCAs:      rootCAs,
+      Certificates: clientCerts,
+    })
+	  db, err = sql.Open("mysql", cxn.username+":"+cxn.password+"@tcp("+host+":"+strconv.Itoa(cxn.port)+")/?multiStatements=true&tls=omnisql")
+  } else {
+	  db, err = sql.Open("mysql", cxn.username+":"+cxn.password+"@tcp("+host+":"+strconv.Itoa(cxn.port)+")/?multiStatements=true")
+	  if err != nil {
+	  	fmt.Println(host, "\t", err.Error())
+	  	return
+	  }
+  }
 	defer db.Close()
 
 	// Execute the query

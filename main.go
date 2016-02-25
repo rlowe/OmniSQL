@@ -136,7 +136,7 @@ func querydb(host string, cxn *sqlcxn, wg *sync.WaitGroup) {
 }
 
 func main() {
-	VERSION := "0.0.1"
+	VERSION := "0.0.2"
 	var versionBool bool
 	var wg sync.WaitGroup
 	var databases string

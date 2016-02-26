@@ -2,11 +2,15 @@ package main
 
 import (
 	"bufio"
+  "crypto/tls"
+  "crypto/x509"
 	"flag"
 	"fmt"
-  "omnisql"
+  "io/ioutil"
+	"omnisql"
 	"os"
 	"os/user"
+  "path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -24,7 +28,7 @@ func main() {
 	hosts := []string{}
 	cxn := omnisql.Sqlcxn{}
 
-	flag.StringVar(&cxn.Query, "query", "SELECT NOW()", "Query to run (default: 'SELECT NOW()')")
+	flag.StringVar(&cxn.Query, "query", "SELECT NOW()", "Query to run")
 	flag.IntVar(&cxn.Port, "port", 3306, "TCP/IP port to connect to (default: 3306)")
 	flag.BoolVar(&cxn.All, "all", false, "Run on all databases except i_s, mysql and test (default: false)")
 	flag.IntVar(&cxn.Threads, "threads", 0, "Number of parallel threads (default: Available CPU Cores)")
@@ -32,6 +36,10 @@ func main() {
 	flag.StringVar(&defaultsFile, "defaults-file", ".my.cnf", "File to use instead of .my.cnf")
 	flag.StringVar(&databases, "databases", "", "Databases (comma-separated) to run query against")
 	flag.BoolVar(&versionBool, "version", false, "Display version information and exit")
+	flag.BoolVar(&cxn.MultiStatements, "multistatements", true, "Allow multiple statements in one query. While this allows batch queries, it also greatly increases the risk of SQL injections. Only the result of the first query is returned, all other results are silently discarded. (default: true)")
+	flag.IntVar(&cxn.ConnectTimeout, "connect-timeout", 2, "Connect timeout in seconds")
+	flag.IntVar(&cxn.ReadTimeout, "read-timeout", 0, "Read timeout in seconds")
+	flag.IntVar(&cxn.WriteTimeout, "write-timeout", 0, "Write timeout in seconds")
 
 	flag.Parse()
 
@@ -109,33 +117,54 @@ func main() {
 			cxn.Port = 3306
 		}
 
-    // dash and underscore are equivalent
+		// dash and underscore are equivalent
 		cxn.SslCa = section.ValueOf("ssl_ca")
-    if cxn.SslCa == "" {
-		  cxn.SslCa = section.ValueOf("ssl-ca")
-    }
+		if cxn.SslCa == "" {
+			cxn.SslCa = section.ValueOf("ssl-ca")
+		}
 		cxn.SslCaPath = section.ValueOf("ssl_capath")
-    if cxn.SslCaPath == "" {
-		  cxn.SslCaPath = section.ValueOf("ssl-capath")
-    }
+		if cxn.SslCaPath == "" {
+			cxn.SslCaPath = section.ValueOf("ssl-capath")
+		}
 		cxn.SslCert = section.ValueOf("ssl_cert")
-    if cxn.SslCert == "" {
-		  cxn.SslCert = section.ValueOf("ssl-cert")
-    }
+		if cxn.SslCert == "" {
+			cxn.SslCert = section.ValueOf("ssl-cert")
+		}
 		cxn.SslCipher = section.ValueOf("ssl_cipher")
-    if cxn.SslCipher == "" {
-		  cxn.SslCipher = section.ValueOf("ssl-cipher")
-    }
+		if cxn.SslCipher == "" {
+			cxn.SslCipher = section.ValueOf("ssl-cipher")
+		}
 		cxn.SslKey = section.ValueOf("ssl_key")
-    if cxn.SslKey == "" {
-		  cxn.SslKey = section.ValueOf("ssl-key")
-    }
+		if cxn.SslKey == "" {
+			cxn.SslKey = section.ValueOf("ssl-key")
+		}
 	}
 
-	// Make sure the SSL stuff is passed as part of the sqlcxn
+	// SSL Support
+	if cxn.SslCa != "" || cxn.SslCaPath != "" || cxn.SslCert != "" || cxn.SslCipher != "" || cxn.SslKey != "" {
+		rootCAs := x509.NewCertPool()
+		pem, err := ioutil.ReadFile(filepath.Join(cxn.SslCaPath, cxn.SslCa))
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+		if ok := rootCAs.AppendCertsFromPEM(pem); !ok {
+			fmt.Println("Failed to append PEM.")
+		}
+		clientCerts := make([]tls.Certificate, 0, 1)
+		certs, err := tls.LoadX509KeyPair(cxn.SslCert, cxn.SslKey)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+		clientCerts = append(clientCerts, certs)
+		cxn.TlsConfig = tls.Config{
+			RootCAs:      rootCAs,
+			Certificates: clientCerts,
+		}
+	}
+
 	for _, host := range hosts {
 		wg.Add(1)
-		go omnisql.Query(host, &cxn, &wg)
+		go omnisql.Query(host, cxn, &wg)
 	}
 
 	wg.Wait()

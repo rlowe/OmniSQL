@@ -1,79 +1,75 @@
 package omnisql
 
 import (
-  "crypto/tls"
-  "crypto/x509"
+	"crypto/tls"
 	"database/sql"
-  "fmt"
-  "io/ioutil"
-  "strconv"
-  "sync"
+	"fmt"
+	"strconv"
+	"sync"
 
-  "github.com/go-sql-driver/mysql"
+	"github.com/go-sql-driver/mysql"
 )
 
 type Sqlcxn struct {
-	Query          string
-	Port           int
-	All            bool
-	Escape         bool
-	Compress       bool
-	ConnectTimeout int
-	ReadTimeout    int
-	Threads        int
-	Username       string
-	Password       string
-	Socket         string
-	Databases      []string
-	SslCa          string
-	SslCaPath      string
-	SslCert        string
-	SslCipher      string
-	SslKey         string
+	Query           string
+	Port            int
+	All             bool
+	Escape          bool
+	Compress        bool
+	ConnectTimeout  int
+	ReadTimeout     int
+	WriteTimeout    int
+	Threads         int
+	Username        string
+	Password        string
+	Socket          string
+	Databases       []string
+	SslCa           string
+	SslCaPath       string
+	SslCert         string
+	SslCipher       string
+	SslKey          string
+	MultiStatements bool
+	TlsConfig       tls.Config
 }
 
-func Query(host string, cxn *Sqlcxn, wg *sync.WaitGroup) {
+func Query(host string, cxn Sqlcxn, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-  var db *sql.DB
-  var err error
+	var dsn string
+	dsn = cxn.Username + ":" + cxn.Password + "@tcp(" + host + ":" + strconv.Itoa(cxn.Port) + ")/"
+	if cxn.MultiStatements == true {
+		dsn += "?multiStatements=true"
+	} else {
+		dsn += "?multiStatements=false"
+	}
+	if cxn.TlsConfig.Certificates != nil {
+		mysql.RegisterTLSConfig("omnisql", &cxn.TlsConfig)
+		dsn += "&tls=omnisql"
+	}
+	if cxn.ConnectTimeout <= 0 {
+		dsn += "&timeout=2"
+	} else {
+		dsn += "&timeout=" + strconv.Itoa(cxn.ConnectTimeout) + "s"
+	}
+	dsn += "&readTimeout=" + strconv.Itoa(cxn.ReadTimeout) + "s"
+	dsn += "&writeTimeout=" + strconv.Itoa(cxn.WriteTimeout) + "s"
 
-  // SSL Support
-  if cxn.SslCa != "" || cxn.SslCaPath != "" || cxn.SslCert != "" || cxn.SslCipher != "" || cxn.SslKey != "" {
-    rootCAs := x509.NewCertPool()
-    {
-      pem, err := ioutil.ReadFile(cxn.SslCa)
-      if err != nil {
-        fmt.Println(err.Error())
-      }
-      if ok := rootCAs.AppendCertsFromPEM(pem); !ok {
-        fmt.Println("Failed to append PEM.")
-      }
-    }
-    clientCerts := make([]tls.Certificate, 0, 1)
-    {
-      certs, err := tls.LoadX509KeyPair(cxn.SslCert, cxn.SslKey)
-      if err != nil {
-        fmt.Println(err.Error())
-      }
-      clientCerts = append(clientCerts, certs)
-    }
-    mysql.RegisterTLSConfig("omnisql", &tls.Config{
-      RootCAs:      rootCAs,
-      Certificates: clientCerts,
-    })
-	  db, err = sql.Open("mysql", cxn.Username+":"+cxn.Password+"@tcp("+host+":"+strconv.Itoa(cxn.Port)+")/?multiStatements=true&tls=omnisql")
-  } else {
-	  db, err = sql.Open("mysql", cxn.Username+":"+cxn.Password+"@tcp("+host+":"+strconv.Itoa(cxn.Port)+")/?multiStatements=true")
-	  if err != nil {
-	  	fmt.Println(host, "\t", err.Error())
-	  	return
-	  }
-  }
+	// SSL Support
+	if cxn.SslCa != "" || cxn.SslCaPath != "" || cxn.SslCert != "" || cxn.SslCipher != "" || cxn.SslKey != "" {
+		dsn += "&tls=omnisql"
+	}
+
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		fmt.Println(host, "\t", err.Error())
+		return
+	}
 	defer db.Close()
 
 	// Execute the query
 	rows, err := db.Query(cxn.Query)
+	defer rows.Close()
 	if err != nil {
 		fmt.Println(host, "\t", err.Error())
 		return
@@ -99,7 +95,8 @@ func Query(host string, cxn *Sqlcxn, wg *sync.WaitGroup) {
 
 	// Fetch rows
 	for rows.Next() {
-		fmt.Print(host)
+		var res string
+		res += host
 		// get RawBytes from data
 		err = rows.Scan(scanArgs...)
 		if err != nil {
@@ -109,20 +106,20 @@ func Query(host string, cxn *Sqlcxn, wg *sync.WaitGroup) {
 
 		// Now do something with the data.
 		// Here we just print each column as a string.
-		var value string
 		for _, col := range values {
 			// Here we can check if the value is nil (NULL value)
 			if col == nil {
-				value = "NULL"
+				res += "\tNULL"
 			} else {
-				value = string(col)
+				res += "\t"
+				res += string(col)
 			}
-			fmt.Print("\t", value)
 		}
-		fmt.Println()
+		fmt.Println(res)
 	}
 	if err = rows.Err(); err != nil {
 		fmt.Println(host, "\t", err.Error())
 		return
 	}
+	return
 }

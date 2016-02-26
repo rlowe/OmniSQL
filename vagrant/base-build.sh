@@ -5,7 +5,7 @@ if [[ -e /etc/redhat-release ]]; then
   sudo yum -y install http://www.percona.com/downloads/percona-release/redhat/0.1-3/percona-release-0.1-3.noarch.rpm
 
   # All the project dependencies to build
-  sudo yum -y install ruby-devel gcc rpm-build git
+  sudo yum -y install ruby-devel gcc rpm-build git rubygem-rake
   gem install fpm
 
   # Go (via EPEL)

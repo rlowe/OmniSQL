@@ -5,8 +5,8 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"flag"
-	"fmt"
 	"io/ioutil"
+	"log"
 	"omnisql"
 	"os"
 	"os/user"
@@ -44,18 +44,15 @@ func main() {
 	flag.Parse()
 
 	if versionBool == true {
-		fmt.Println("omnisql VERSION:", VERSION)
-		os.Exit(1)
+		log.Fatalln("omnisql", VERSION)
 	}
 
 	fi, err := os.Stdin.Stat()
 	if err != nil {
-		fmt.Println("Could not determine hosts from STDIN")
-		os.Exit(1)
+		log.Fatalln("Could not determine hosts from STDIN")
 	}
 	if fi.Mode()&os.ModeNamedPipe == 0 {
-		fmt.Println("Could not determine hosts from STDIN")
-		os.Exit(1)
+		log.Fatalln("Could not determine hosts from STDIN")
 	}
 
 	scanner := bufio.NewScanner(os.Stdin)
@@ -66,8 +63,7 @@ func main() {
 		}
 	}
 	if len(hosts) < 1 {
-		fmt.Println("Could not determine hosts from STDIN")
-		os.Exit(1)
+		log.Fatalln("Could not determine hosts from STDIN")
 	}
 
 	if cxn.Threads == 0 {
@@ -82,8 +78,7 @@ func main() {
 
 	u, err := user.Current()
 	if err != nil && u == nil {
-		fmt.Println(err.Error())
-		return
+		log.Println("WARNING: Could not determine current username with user.Current()")
 	}
 	if cxn.Username == "" {
 		cxn.Username = u.Username
@@ -143,17 +138,18 @@ func main() {
 	// SSL Support
 	if cxn.SslCa != "" || cxn.SslCaPath != "" || cxn.SslCert != "" || cxn.SslCipher != "" || cxn.SslKey != "" {
 		rootCAs := x509.NewCertPool()
-		pem, err := ioutil.ReadFile(filepath.Join(cxn.SslCaPath, cxn.SslCa))
+		pem_path := filepath.Join(cxn.SslCaPath, cxn.SslCa)
+		pem, err := ioutil.ReadFile(pem_path)
 		if err != nil {
-			fmt.Println(err.Error())
+			log.Fatalln("ERROR: Could Not Read PEM at" + pem_path)
 		}
 		if ok := rootCAs.AppendCertsFromPEM(pem); !ok {
-			fmt.Println("Failed to append PEM.")
+			log.Fatalln("ERROR: Failed to append PEM to x509.NewCertPool()")
 		}
 		clientCerts := make([]tls.Certificate, 0, 1)
 		certs, err := tls.LoadX509KeyPair(cxn.SslCert, cxn.SslKey)
 		if err != nil {
-			fmt.Println(err.Error())
+			log.Fatalln("ERROR: Could not load x509 key pair\n" + err.Error())
 		}
 		clientCerts = append(clientCerts, certs)
 		cxn.TlsConfig = tls.Config{

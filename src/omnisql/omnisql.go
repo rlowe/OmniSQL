@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"database/sql"
 	"fmt"
+  "log"
 	"strconv"
 	"sync"
 
@@ -62,7 +63,7 @@ func Query(host string, cxn Sqlcxn, wg *sync.WaitGroup) {
 
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
-    fmt.Println(host, "\t", err.Error())
+    log.Println(host, "\t", err.Error())
 		return
 	}
 	defer db.Close()
@@ -70,14 +71,14 @@ func Query(host string, cxn Sqlcxn, wg *sync.WaitGroup) {
 	// Execute the query
 	rows, err := db.Query(cxn.Query)
 	if err != nil {
-    fmt.Println("WARNING: Could not connect to '"+host+"': Unknown MySQL server host '"+host+"'")
+    log.Println("WARNING: Could not connect to '"+host+"': Unknown MySQL server host '"+host+"'")
 		return
 	}
 
 	// Get column names
 	columns, err := rows.Columns()
 	if err != nil {
-		fmt.Println(host, "\t", err.Error())
+		log.Println(host, "\t", err.Error())
 		return
 	}
 
@@ -99,7 +100,7 @@ func Query(host string, cxn Sqlcxn, wg *sync.WaitGroup) {
 		// get RawBytes from data
 		err = rows.Scan(scanArgs...)
 		if err != nil {
-			fmt.Println(host, "\t", err.Error())
+			log.Println(host, "\t", err.Error())
 			return
 		}
 
@@ -117,7 +118,7 @@ func Query(host string, cxn Sqlcxn, wg *sync.WaitGroup) {
 		fmt.Println(res)
 	}
 	if err = rows.Err(); err != nil {
-		fmt.Println(host, "\t", err.Error())
+		log.Println(host, "\t", err.Error())
 		return
 	}
 	return

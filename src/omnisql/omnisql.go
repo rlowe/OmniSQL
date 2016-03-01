@@ -62,16 +62,15 @@ func Query(host string, cxn Sqlcxn, wg *sync.WaitGroup) {
 
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
-		fmt.Println(host, "\t", err.Error())
+    fmt.Println(host, "\t", err.Error())
 		return
 	}
 	defer db.Close()
 
 	// Execute the query
 	rows, err := db.Query(cxn.Query)
-	defer rows.Close()
 	if err != nil {
-		fmt.Println(host, "\t", err.Error())
+    fmt.Println("WARNING: Could not connect to '"+host+"': Unknown MySQL server host '"+host+"'")
 		return
 	}
 

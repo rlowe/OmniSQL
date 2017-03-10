@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"database/sql"
 	"fmt"
-  "log"
+	"log"
 	"strconv"
 	"sync"
 
@@ -63,7 +63,7 @@ func Query(host string, cxn Sqlcxn, wg *sync.WaitGroup) {
 
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
-    log.Println(host, "\t", err.Error())
+		log.Println(host, "\t", err.Error())
 		return
 	}
 	defer db.Close()
@@ -71,7 +71,7 @@ func Query(host string, cxn Sqlcxn, wg *sync.WaitGroup) {
 	// Execute the query
 	rows, err := db.Query(cxn.Query)
 	if err != nil {
-    log.Println("WARNING: Could not connect to '"+host+"': Unknown MySQL server host '"+host+"'")
+		log.Println("WARNING: Could not connect to '" + host + "': Unknown MySQL server host '" + host + "'")
 		return
 	}
 

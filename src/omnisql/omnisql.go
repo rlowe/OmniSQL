@@ -35,7 +35,7 @@ type Sqlcxn struct {
 	TlsConfig       tls.Config
 }
 
-// Query() does all the work, sending queries to the database and coordinating
+// Query does all the work, sending queries to the database and coordinating
 func Query(host string, cxn Sqlcxn, wg *sync.WaitGroup) {
 	defer wg.Done()
 

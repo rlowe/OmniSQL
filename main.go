@@ -138,10 +138,10 @@ func main() {
 	// SSL Support
 	if cxn.SslCa != "" || cxn.SslCaPath != "" || cxn.SslCert != "" || cxn.SslCipher != "" || cxn.SslKey != "" {
 		rootCAs := x509.NewCertPool()
-		pem_path := filepath.Join(cxn.SslCaPath, cxn.SslCa)
-		pem, err := ioutil.ReadFile(pem_path)
+		pemPath := filepath.Join(cxn.SslCaPath, cxn.SslCa)
+		pem, err := ioutil.ReadFile(pemPath)
 		if err != nil {
-			log.Fatalln("ERROR: Could Not Read PEM at" + pem_path)
+			log.Fatalln("ERROR: Could Not Read PEM at" + pemPath)
 		}
 		if ok := rootCAs.AppendCertsFromPEM(pem); !ok {
 			log.Fatalln("ERROR: Failed to append PEM to x509.NewCertPool()")

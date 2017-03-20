@@ -11,6 +11,7 @@ import (
 	"github.com/go-sql-driver/mysql"
 )
 
+// Sqlcxn contains all information to successfully connect to MySQL
 type Sqlcxn struct {
 	Query           string
 	Port            int
@@ -34,6 +35,7 @@ type Sqlcxn struct {
 	TlsConfig       tls.Config
 }
 
+// Query() does all the work, sending queries to the database and coordinating
 func Query(host string, cxn Sqlcxn, wg *sync.WaitGroup) {
 	defer wg.Done()
 

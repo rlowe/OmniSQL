@@ -94,10 +94,7 @@ func main() {
 			// We don't particularly care here
 		}
 
-		section, err := cnf.Section("client")
-		if err != nil {
-			// We don't particularly care here
-		}
+		section, _ := cnf.Section("client")
 
 		if cxn.Username == "" {
 			cxn.Username = section.ValueOf("user")

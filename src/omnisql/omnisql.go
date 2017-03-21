@@ -35,10 +35,7 @@ type Sqlcxn struct {
 	TlsConfig       tls.Config
 }
 
-// Query does all the work, sending queries to the database and coordinating
-func Query(host string, cxn Sqlcxn, wg *sync.WaitGroup) {
-	defer wg.Done()
-
+func (s *Sqlcxn) Dsn() string {
 	var dsn string
 	dsn = cxn.Username + ":" + cxn.Password + "@tcp(" + host + ":" + strconv.Itoa(cxn.Port) + ")/"
 	if cxn.MultiStatements == true {
@@ -62,6 +59,15 @@ func Query(host string, cxn Sqlcxn, wg *sync.WaitGroup) {
 	if cxn.SslCa != "" || cxn.SslCaPath != "" || cxn.SslCert != "" || cxn.SslCipher != "" || cxn.SslKey != "" {
 		dsn += "&tls=omnisql"
 	}
+
+	return dsn
+}
+
+// Query does all the work, sending queries to the database and coordinating
+func Query(host string, cxn Sqlcxn, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	dsn := cxn.Dsn()
 
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {

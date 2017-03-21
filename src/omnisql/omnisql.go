@@ -35,6 +35,7 @@ type Sqlcxn struct {
 	TlsConfig       tls.Config
 }
 
+// Dsn builds a go-sql-driver/mysql DSN for connecting to MySQL
 func (s *Sqlcxn) Dsn() string {
 	var dsn string
 	dsn = cxn.Username + ":" + cxn.Password + "@tcp(" + host + ":" + strconv.Itoa(cxn.Port) + ")/"

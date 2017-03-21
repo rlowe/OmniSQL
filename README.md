@@ -1,6 +1,7 @@
-# OmniSQL
+# OmniSQL - Multi-Server MySQL Command-Line Client
 
-Multi-Server MySQL Command-Line Client
+[![Go Report Card](https://goreportcard.com/badge/github.com/rlowe/omnisql)](https://goreportcard.com/report/github.com/rlowe/omnisql)
+
 
 # Testing in Vagrant
 
@@ -17,3 +18,7 @@ Multi-Server MySQL Command-Line Client
     [vagrant@admin omnisql]$
 
 # Building RPMs
+
+# License
+
+[Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0)

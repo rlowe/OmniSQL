@@ -1,7 +1,7 @@
 # OmniSQL - Multi-Server MySQL Command-Line Client
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/rlowe/omnisql)](https://goreportcard.com/report/github.com/rlowe/omnisql)
-
+[![GoDoc](https://godoc.org/github.com/rlowe/omnisql?status.svg)](https://godoc.org/github.com/rlowe/omnisql)
 
 # Testing in Vagrant
 

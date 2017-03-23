@@ -32,7 +32,7 @@ type Sqlcxn struct {
 	SslCipher       string
 	SslKey          string
 	MultiStatements bool
-	TlsConfig       tls.Config
+	TlsConfig       *tls.Config
 }
 
 // Dsn builds a go-sql-driver/mysql DSN for connecting to MySQL

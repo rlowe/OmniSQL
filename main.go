@@ -7,7 +7,6 @@ import (
 	"flag"
 	"io/ioutil"
 	"log"
-	"omnisql"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -17,6 +16,7 @@ import (
 	"sync"
 
 	"github.com/alyu/configparser"
+	"github.com/rlowe/omnisql"
 )
 
 func main() {

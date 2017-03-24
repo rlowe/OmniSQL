@@ -37,7 +37,7 @@ type Sqlcxn struct {
 }
 
 // Dsn builds a go-sql-driver/mysql DSN for connecting to MySQL
-func (cxn *Sqlcxn) Dsn() string {
+func (cxn *Sqlcxn) Dsn(string host) string {
 	var dsn string
 	dsn = cxn.Username + ":" + cxn.Password + "@tcp(" + host + ":" + strconv.Itoa(cxn.Port) + ")/"
 	if cxn.MultiStatements == true {
@@ -115,7 +115,7 @@ func (cxn *Sqlcxn) ParseDefaultsFile(string defaultsFile) {
 func Query(host string, cxn Sqlcxn, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	dsn := cxn.Dsn()
+	dsn := cxn.Dsn(host)
 
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {

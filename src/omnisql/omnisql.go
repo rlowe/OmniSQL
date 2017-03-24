@@ -64,6 +64,51 @@ func (s *Sqlcxn) Dsn() string {
 	return dsn
 }
 
+func (s *Sqlcxn) ParseDefaultsFile(string defaultsFile) {
+	// Do the defaults file awesomeness!
+	cnf, err := configparser.Read(defaultsFile)
+	if err != nil {
+		// We don't particularly care here
+	}
+
+	section, _ := cnf.Section("client")
+
+	if cxn.Username == "" {
+		cxn.Username = section.ValueOf("user")
+	}
+	if cxn.Password == "" {
+		cxn.Password = section.ValueOf("password")
+	}
+	cxn.Socket = section.ValueOf("socket")
+	cxn.Port, err = strconv.Atoi(section.ValueOf("port"))
+
+	if err != nil {
+		cxn.Port = 3306
+	}
+
+	// dash and underscore are equivalent
+	cxn.SslCa = section.ValueOf("ssl_ca")
+	if cxn.SslCa == "" {
+		cxn.SslCa = section.ValueOf("ssl-ca")
+	}
+	cxn.SslCaPath = section.ValueOf("ssl_capath")
+	if cxn.SslCaPath == "" {
+		cxn.SslCaPath = section.ValueOf("ssl-capath")
+	}
+	cxn.SslCert = section.ValueOf("ssl_cert")
+	if cxn.SslCert == "" {
+		cxn.SslCert = section.ValueOf("ssl-cert")
+	}
+	cxn.SslCipher = section.ValueOf("ssl_cipher")
+	if cxn.SslCipher == "" {
+		cxn.SslCipher = section.ValueOf("ssl-cipher")
+	}
+	cxn.SslKey = section.ValueOf("ssl_key")
+	if cxn.SslKey == "" {
+		cxn.SslKey = section.ValueOf("ssl-key")
+	}
+}
+
 // Query does all the work, sending queries to the database and coordinating
 func Query(host string, cxn Sqlcxn, wg *sync.WaitGroup) {
 	defer wg.Done()

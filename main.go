@@ -20,7 +20,7 @@ import (
 )
 
 func main() {
-	VERSION := "0.0.2"
+	VERSION := "0.0.3"
 	var versionBool bool
 	var wg sync.WaitGroup
 	var databases string

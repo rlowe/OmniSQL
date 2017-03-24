@@ -64,6 +64,7 @@ func (s *Sqlcxn) Dsn() string {
 	return dsn
 }
 
+// ParseDefaultsFile updates a Sqlcxn with any parameters in the defaults file
 func (s *Sqlcxn) ParseDefaultsFile(string defaultsFile) {
 	// Do the defaults file awesomeness!
 	cnf, err := configparser.Read(defaultsFile)

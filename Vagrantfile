@@ -2,7 +2,7 @@ DEVELOPMENT_DIR = File.join(ENV['HOME'], 'Development')
 
 ENV['VAGRANT_SERVER_URL'] = "https://atlas.hashicorp.com" if ENV['VAGRANT_SERVER_URL'].nil? || ENV['VAGRANT_SERVER_URL'].empty?
 ENV['VAGRANT_DEFAULT_PROVIDER'] = 'virtualbox' if ENV['VAGRANT_DEFAULT_PROVIDER'].nil? || ENV['VAGRANT_DEFAULT_PROVIDER'].empty?
-BOX = ENV['VAGRANT_BOX'].nil? || ENV['VAGRANT_BOX'].empty? ? 'nrel/CentOS-6.6-x86_64' : ENV['VAGRANT_BOX']
+BOX = ENV['VAGRANT_BOX'].nil? || ENV['VAGRANT_BOX'].empty? ? 'boxcutter/centos68' : ENV['VAGRANT_BOX']
 
 VAGRANTFILE_API_VERSION = "2"
 

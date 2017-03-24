@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/alyu/configparser"
 	"github.com/go-sql-driver/mysql"
 )
 
@@ -36,7 +37,7 @@ type Sqlcxn struct {
 }
 
 // Dsn builds a go-sql-driver/mysql DSN for connecting to MySQL
-func (s *Sqlcxn) Dsn() string {
+func (cxn *Sqlcxn) Dsn() string {
 	var dsn string
 	dsn = cxn.Username + ":" + cxn.Password + "@tcp(" + host + ":" + strconv.Itoa(cxn.Port) + ")/"
 	if cxn.MultiStatements == true {
@@ -65,7 +66,7 @@ func (s *Sqlcxn) Dsn() string {
 }
 
 // ParseDefaultsFile updates a Sqlcxn with any parameters in the defaults file
-func (s *Sqlcxn) ParseDefaultsFile(string defaultsFile) {
+func (cxn *Sqlcxn) ParseDefaultsFile(string defaultsFile) {
 	// Do the defaults file awesomeness!
 	cnf, err := configparser.Read(defaultsFile)
 	if err != nil {

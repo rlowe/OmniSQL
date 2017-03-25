@@ -46,7 +46,7 @@ func (cxn *Sqlcxn) Dsn(host string) string {
 		dsn += "?multiStatements=false"
 	}
 	if cxn.TlsConfig.Certificates != nil {
-		mysql.RegisterTLSConfig("omnisql", &cxn.TlsConfig)
+		mysql.RegisterTLSConfig("omnisql", cxn.TlsConfig)
 		dsn += "&tls=omnisql"
 	}
 	if cxn.ConnectTimeout <= 0 {
